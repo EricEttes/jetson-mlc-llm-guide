@@ -40,7 +40,7 @@ During the installation steps, several modules and dependencies are installed ma
 ``` bash
 export TVM_HOME=/mnt/nvme/tvm
 export PYTHONPATH=/mnt/nvme/tvm/python:$PYTHONPATH
-export PATH=/usr/local/cuda/bin:/usr/lib/llvm-17/bin:/home/eric/.local/bin:$PATH
+export PATH=/usr/local/cuda/bin:/usr/lib/llvm-17/bin:~/.local/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/llvm-17/lib:/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 ```
 
