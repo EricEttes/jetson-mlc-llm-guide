@@ -17,7 +17,7 @@ These steps are a distillation of my journey to a proven, working build and depl
 
 If you need an NVME drive, WD SN530 is a good choice as it's low power, cheap and has plenty of diskspace!
 
-# 0. SETUP
+# 0. Setup
 
 ## 0.1. Mount NVME drive
 
@@ -33,7 +33,7 @@ sudo chmod -R 755 /mnt/nvme
 echo '/dev/nvme0n1p1 /mnt/nvme ext4 defaults 0 2' | sudo tee -a /etc/fstab
 ```
 
-## 0.2. .bashrc
+## 0.2. Add paths to .bashrc
 
 During the installation steps, several modules and dependencies are installed manually, or via APT. In the end, your .bashrc should have these lines added at the end of the file. We can add them as a first step to make sure you always have the paths and variables available to make the installation smoother :-)
 
@@ -46,8 +46,7 @@ export LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/llvm-17/lib:/lib/aarch64-l
 
 Activate your environment: `source ~/.bashrc`
 
-
-# 1. SWAP SPACE CONFIG
+# 1. Swap space configuration
 
 - Allocate 32G of swap on it
 - Update fstab to make permanent
@@ -89,11 +88,11 @@ sudo apt-get update
 sudo apt-get install -y python3.10 python3.10-venv python3-pip libopenblas-dev libtinfo-dev
 ```
 
-# 3. TVM BUILD
+# 3. TVM cloning and building
 
 A compatible TVM build **requires** LLVM-17, which isn't available via apt-get for the Jetson. We'll start by downloading and installing the binary before building TVM.
 
-## 3.1. INSTALL LLVM-17
+## 3.1. Install LLVM-17
 
 In this step, you will get the binary, unpack it and move it to `/usr/lib/llvm-17`. It's a large file, so it might take a while depending on your network connection.
 
@@ -103,7 +102,7 @@ tar xf clang+llvm-17.0.6-aarch64-linux-gnu.tar.xz
 sudo mv clang+llvm-17.0.6-aarch64-linux-gnu /usr/lib/llvm-17
 ```
 
-## 3.2. BUILD TVM
+## 3.2. Build TVM
 
 These steps, you will pull the TVM source, configure the build and build your own TVM. We'll start off with cloning the source from GitHub:
 
@@ -121,7 +120,7 @@ cp ../cmake/config.cmake .
 
 *At the time of writing, the commit hash used was `bfb0dd6a161d33c58f67469988244b139366e063`. If issues arise during step 3.2.2, try to use this hash and try again. If compilation still fails, there might be something wrong in your environment; retrace your steps and verify everything is installed correctly*
 
-### 3.2.1. CONFIGURE BUILD
+### 3.2.1. Configure build
 
 Inside the `/mnt/nvme/tvm/build` directory, we have a `config.cmake` file that is used to set flags; use the following to setup the config to use CUDA, Setup the correct CUDA architecture and use recommended settings for MLC-LLM. You can copy/paste this entire block and run it. The lines that start with '-' will be printed to your console and can be ignored; I added those as a means of commenting what everything is for.
 
@@ -161,7 +160,7 @@ echo "set(USE_RPC ON)" >> config.cmake
 echo "set(USE_GRAPH_EXECUTOR ON)" >> config.cmake
 ```
 
-### 3.2.2. COMPILE AND INSTALL
+### 3.2.2. Compile and install
 
 Now that we have the source code and the build configuration ready, it's time to build. This takes a while (15-20 minutes) on the Jetson. The following command is ran inside `/mnt/nvme/tvm/build`, you're probably still in this folder:
 
@@ -180,7 +179,7 @@ cd /mnt/nvme/tvm/3rdparty/tvm-ffi
 pip3 install --user --no-build-isolation .
 ```
 
-### 3.2.3. VERIFY BUILD (NEED TO TEST THIS AS IT TOOK A LOT OF TRIES)
+### 3.2.3. Verify build
 
 Check if we have all modules, the following command should show `libtvm_allvisible.so`, `libtvm_runtime.so` and `libtvm.so`:
 
@@ -209,11 +208,11 @@ python3 -c "import tvm; print(tvm.cuda().exist)"
 ```
 *should print `True`*
 
-# 4. MLC-LLM BUILD
+# 4. MLC-LLM build
 
 With TVM built and verified, we can move to MLC-LLM! 
 
-## 4.1. Install RUST
+## 4.1. Install Rust
 
 Rust will be installed in this step, it will add itself to your `~/.bashrc` aswell (`. "$HOME/.cargo/env"` will be added) and enable itself with the source command. 
 
@@ -303,7 +302,6 @@ Once you've reached this place, you're all set!
 
 # 5. Troubleshooting
 
-# 5. TROUBLESHOOTING
 ### Common Issues and Fixes
 | Issue                          | Likely Cause                     | Solution                                  |
 |--------------------------------|----------------------------------|-------------------------------------------|
@@ -313,7 +311,7 @@ Once you've reached this place, you're all set!
 | Out of memory during build     | Insufficient swap                | Verify `free -h` shows 32G swap.          |
 | CUTLASS errors in MLC-LLM      | CUTLASS enabled in MLC-LLM       | Re-run `gen_cmake_config.py` with `n`.    |
 
-# 6. STARTING A MODEL
+# 6. Starting a model
 
 To start a model there are multiple options. In this guide, we'll explore two different options:
 - Directly via command line using `mlc_llm`
@@ -327,7 +325,7 @@ sudo apt-get install git-lfs
 git lfs install
 ```
 
-## 6.2 STARTING FROM COMMAND LINE
+## 6.2 Starting from command line
 
 To start a model from command line, use this command (Note the order of parameters, they matter!).
 
@@ -412,11 +410,11 @@ If you have more questions about polar bears or any other topic, feel free to as
 prefill: 29.0 tok/s, decode: 10.6 tok/s
 ```
 
-## 6.3 STARTING USING PYTHON
+## 6.3 Starting using a Python script
 
 In this chapter we'll explore downloading a model, converting it ourselves and running it via Python. This will allow you to try models outside of the mlc-ai model zoo and even give you a small performance boost (as the model is compiled using optimal parameters). The Python script will manage the context aswell, this will make the model 'forget' older messages, but it'll keep the context well within the limits (You might have ran into the LLM becoming slow all of a sudden (or crashing with an error), this is the context limit that got reached).
 
-### 6.3.1. DOWNLOAD A MODEL
+### 6.3.1. Download a model
 
 ``` bash
 mkdir -p /mnt/nvme/models/ && cd`
@@ -424,7 +422,7 @@ git clone https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3
 ```
 *This will take a while, git-lfs is fetching large files and there's no feedback. Use `top` to see if there's a git process working!*
 
-### 6.3.2 CONVERT MODEL WEIGHTS
+### 6.3.2 Convert model weights
 
 Here we're creating the MLC model. Take special note of the folder names; the MLC one has an `-MLC` postfix. This can be anything but I like to keep the original model name as reference. You can play with quantization here aswell, but q4f16_1 is a nice value to keep RAM usage low and keep good quality.
 
@@ -437,7 +435,7 @@ Here we're creating the MLC model. Take special note of the folder names; the ML
 mlc_llm convert_weight /mnt/nvme/models/Mistral-7B-Instruct-v0.3/ --quantization q4f16_1 -o /mnt/nvme/models/Mistral-7B-Instruct-v0.3-MLC
 ```
 
-### 6.3.3 GENERATE MODEL CONFIG
+### 6.3.3 Generate model config
 
 Use gen_config to create a configuration for the model we just created and note the folders (the `-MLC` folder is the output location). The value for quantization must be the same value we used in the previous step.
 
@@ -618,7 +616,7 @@ Assistant: Polar bears (Ursus maritimus) are the largest land carnivores on Eart
 Tokens: 478 | Speed: 13.7 tok/s
 ```
 
-# 7. TROUBLESHOOTING
+# 7. Troubleshooting
 
 ### Common Issues
 | Issue                          | Fix                                  |
