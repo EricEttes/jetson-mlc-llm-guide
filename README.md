@@ -35,7 +35,7 @@ echo '/dev/nvme0n1p1 /mnt/nvme ext4 defaults 0 2' | sudo tee -a /etc/fstab
 
 ## 0.2. Add paths to .bashrc
 
-During the installation steps, several modules and dependencies are installed manually, or via APT. In the end, your .bashrc should have these lines added at the end of the file. We can add them as a first step to make sure you always have the paths and variables available to make the installation smoother :-)
+During the installation steps, several modules and dependencies are installed manually, or via APT. In the end, your `.bashrc` should have these lines added at the end of the file. We can add them as a first step to make sure you always have the paths and variables available to make the installation smoother :-)
 
 ``` bash
 export TVM_HOME=/mnt/nvme/tvm
@@ -417,8 +417,7 @@ In this chapter we'll explore downloading a model, converting it ourselves and r
 ### 6.3.1. Download a model
 
 ``` bash
-mkdir -p /mnt/nvme/models/ && cd`
-git clone https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3
+mkdir -p /mnt/nvme/models/ && cd git clone https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3
 ```
 *This will take a while, git-lfs is fetching large files and there's no feedback. Use `top` to see if there's a git process working!*
 
