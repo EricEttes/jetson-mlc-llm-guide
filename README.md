@@ -259,7 +259,7 @@ Use OpenCL? (y/n) n
 
 ## 4.4. Build MLC-LLM
 
-In this step, we're going to build MLC-LLM. There's 1 thing we need to do though, and that is to relax the flashinfer version as it's set to use **exactly** 0.4.0 right now. This version isn't available via pip3, so we'll use another one by doing the following:
+In this step, we're going to build MLC-LLM and install the Python bindings. There's 1 thing we need to do though for the bindings, and that is to relax the flashinfer version as it's set to use **exactly** 0.4.0 right now. This version isn't available via pip3, so we'll use another one by doing the following:
 
 ### 4.4.1. Update flashinfer dependency version
 
@@ -271,7 +271,7 @@ Edit requirements.txt and change `flashinfer-python==0.4.0` to `flashinfer-pytho
 
 *Mandatory disclaimer: Using >=0.4.0 may introduce compatibility issues. If you encounter errors, try flashinfer-python==0.4.0 with a manual wheel install. At the time of writing though, it worked perfectly!*
 
-### 4.4.2. Install flashinfer
+### 4.4.2. Install flashinfer and MLC Python bindings
 
 ``` bash
 pip3 install flashinfer-python
