@@ -85,7 +85,7 @@ First, we'll install everything we need in order to proceed. In this guide, I do
 
 ``` bash
 sudo apt-get update
-sudo apt-get install -y python3.10 python3.10-venv python3-pip libopenblas-dev libtinfo-dev
+sudo apt-get install -y python3.10 python3.10-venv python3-pip libopenblas-dev libtinfo-dev cmake
 ```
 
 # 3. TVM cloning and building
@@ -175,6 +175,7 @@ pip3 install setuptools_scm
 pip3 install ninja
 pip3 install cython
 pip3 install psutil
+pip3 install scikit-build-core
 cd /mnt/nvme/tvm/3rdparty/tvm-ffi
 pip3 install --user --no-build-isolation .
 ```
