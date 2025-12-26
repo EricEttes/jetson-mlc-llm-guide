@@ -239,7 +239,7 @@ mkdir -p build && cd build
 In this step, we're creating a build configuration file. Make sure you're inside `/mnt/nvme/mlc-llm/build`.
 
 When running gen_cmake_config, a couple of questions are asked. Make sure you reply with the following answers:
-- TVM_SOURCE_DIR: Your TVM home directory (`/mnt/nvme/tvm` in this guide)
+- TVM_SOURCE_DIR: Your *absolute* TVM home directory (`/mnt/nvme/tvm` in this guide). If you use a different path, don't use `~/directory` but `/home/username/directory` because cmake won't work with relative paths!
 - Use CUDA: `y`
 
 The rest of the answers should be answered with `n`. **We've built TVM with CUTLASS enabled and we're not using it here**. CUTLASS (CUDA Templates for Linear Algebra Subroutines) in a nutshell speeds up linear algebra operations which are basically the heart of transformer models. On the Jetson Orin Nano with its limited VRAM, I was unable to build MLC-LLM with CUTLASS enabled and chose to disable it. If, in the future I manage to build MLC-LLM with CUTLASS enabled, I will update this guide, but on the Jetsons' Ampere architecture, it can cause some instability and doesn't really speed things up too much (we'll use cuBLAS instead as it gives a tiny boost without instability issues).
