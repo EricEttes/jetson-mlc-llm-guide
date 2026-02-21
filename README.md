@@ -135,6 +135,8 @@ nvcc --version
 
 *Note: We enable CUTLASS here for TVM, but MLC-LLM will disable it during its build (see Section 4.3). I'm still looking for a way to enable CUTLASS with MLC-LLM, and enabling it now will save us some time in the future.*
 
+*[edit]: MLC-LLM's CMakeCache by default sets `CMAKE_CUDA_ARCHITECTURES` to Maxwell (sm52) instead of the Jetsons' Ampere (sm87). This caused the build to throw errors about the `__hfma2` intrinsic. Added this note to the MLC-LLM chapter aswell as a fix*
+
 ``` bash
 echo - LLVM is a must dependency
 echo "set(USE_LLVM \"llvm-config --ignore-libllvm --link-static\")" >> config.cmake
@@ -244,12 +246,14 @@ When running gen_cmake_config, a couple of questions are asked. Make sure you re
 
 The rest of the answers should be answered with `n`. **We've built TVM with CUTLASS enabled and we're not using it here**. CUTLASS (CUDA Templates for Linear Algebra Subroutines) in a nutshell speeds up linear algebra operations which are basically the heart of transformer models. On the Jetson Orin Nano with its limited VRAM, I was unable to build MLC-LLM with CUTLASS enabled and chose to disable it. If, in the future I manage to build MLC-LLM with CUTLASS enabled, I will update this guide, but on the Jetsons' Ampere architecture, it can cause some instability and doesn't really speed things up too much (we'll use cuBLAS instead as it gives a tiny boost without instability issues).
 
+*[edit]: MLC-LLM's CMakeCache by default sets `CMAKE_CUDA_ARCHITECTURES` to Maxwell (sm52) instead of the Jetsons' Ampere (sm87). This caused the build to throw errors about the `__hfma2` intrinsic. *
+
 ``` bash
 python3 ../cmake/gen_cmake_config.py
 
 Enter TVM_SOURCE_DIR in absolute path. If not specified, 3rdparty/tvm will be used by default: /mnt/nvme/tvm
 Use CUDA? (y/n): y
-Use CUTLASS? (y/n): n
+Use CUTLASS? (y/n): y [edit: changed 'n' to 'y']
 Use CUBLAS? (y/n): y
 Use ROCm? (y/n): n
 Use Vulkan? (y/n): n
@@ -278,11 +282,15 @@ pip3 install flashinfer-python
 pip3 install -e .
 ```
 
+[edit] FlashInfer didn't support sm87, but https://github.com/flashinfer-ai/flashinfer/pull/2580 aims to fix that. I added a guide with a workaround to have FlashInfer work to this repo @ `notes_raw/flashinfer-jetson.md`
+
 ### 4.4.3. Build MLC-LLM
+
+[edit] Added `-DCMAKE_CUDA_ARCHITECTURES=87` to use sm87 architecture
 
 ``` bash
 cd /mnt/nvme/mlc-llm/build/
-cmake .. && make -j $(nproc) && cd ..
+cmake .. -DCMAKE_CUDA_ARCHITECTURES=87 && make -j $(nproc) && cd ..
 ```
 
 ### 4.4.4. Verify build
@@ -298,6 +306,8 @@ python3 -c "import mlc_llm; print(mlc_llm.__version__)"
 python3 -c "from mlc_llm import cuda; print(cuda().exist)"
 ```
 *Should print `True`*
+
+*NOTE: At the time of writing, this command would work but in a later version of MLC-LLM this stopped working. A more reliable test would be to start mlc_llm like this: `mlc_llm chat --device cuda:0 --overrides "context_window_size=1024;prefill_chunk_size=512" HF://mlc-ai/Hermes-3-Llama-3.2-3B-q4f16_1-MLC` and the first line that's logged should show `INFO auto_device.py:82: Found device: cuda:0`*
 
 Once you've reached this place, you're all set!
 
@@ -444,6 +454,8 @@ The command below has two parameter values that are specific to Mistral models: 
 ``` bash
 mlc_llm gen_config /mnt/nvme/models/Mistral-7B-Instruct-v0.3/ --quantization q4f16_1 --conv-template mistral_default --model-type mistral -o /mnt/nvme/models/Mistral-7B-Instruct-v0.3-MLC/
 ```
+
+*If the gen_config fails with error `ImportError: cannot import name 'builder' from 'google.protobuf.internal' (/usr/lib/python3/dist-packages/google/protobuf/internal/__init__.py)`, there's a version conflict between protobuf and sentencepiece. Fix this by upgrading protobuf: `pip3 install --upgrade protobuf` and then sentencepiece: `pip3 install --upgrade sentencepiece`.*
 
 We now have a `mlc-chat-config.json` inside  `/mnt/nvme/models/Mistral-7B-Instruct-v0.3-MLC/`. Since the default values are too big for the Jetson, we'll edit it. Change all occurrences of the following values (usually only 2):
 
